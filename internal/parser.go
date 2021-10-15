@@ -17,26 +17,31 @@ const (
 	exprListLit
 )
 
+// Expr is used to allow many concrete types to be an expression
 type Expr interface {
 	Kind() ExprType
 	String() string
 }
 
+// Atom represents an atom expression
 type Atom struct{ value string }
 
 func (a Atom) Kind() ExprType { return exprAtom }
 func (a Atom) String() string { return a.value }
 
+// Number represents a number expression
 type Number struct{ value int64 }
 
 func (n Number) Kind() ExprType { return exprNumber }
 func (n Number) String() string { return fmt.Sprintf("%d", n.value) }
 
+// String represents a string expression
 type String struct{ value string }
 
 func (s String) Kind() ExprType { return exprString }
 func (s String) String() string { return fmt.Sprintf(`"%s"`, s.value) }
 
+// List represents a literal or non-literal list of expressions
 type List struct {
 	values []Expr
 	isLit  bool
@@ -66,6 +71,7 @@ func (l List) String() string {
 	return out
 }
 
+// Parser parses an input into an Expr AST
 type Parser struct {
 	lexer   *Lexer
 	peekTok *Token
@@ -78,6 +84,7 @@ func NewParser(input string) *Parser {
 	}
 }
 
+// next returns the next Token and literal string from the input
 func (p *Parser) next() (Token, string) {
 	if p.peekTok != nil {
 		defer func() {
@@ -88,6 +95,7 @@ func (p *Parser) next() (Token, string) {
 	return p.lexer.Next()
 }
 
+// peek returns the next Token from the input without consuming it
 func (p *Parser) peek() Token {
 	if p.peekTok != nil {
 		return *p.peekTok
@@ -98,6 +106,7 @@ func (p *Parser) peek() Token {
 	return tok
 }
 
+// consume takes the next token and panics if it was not the expected Token
 func (p *Parser) consume(expected Token) {
 	tok, _ := p.next()
 	if tok != expected {
@@ -105,12 +114,14 @@ func (p *Parser) consume(expected Token) {
 	}
 }
 
+// Expression parses the input in its current state and produces an Expr
 func (p *Parser) Expression() Expr {
 	tok, val := p.next()
 	switch tok {
 	case tokAtom:
 		return Atom{value: val}
 	case tokMinus:
+		// could be a number or a `-` atom
 		if p.peek() != tokNumber {
 			return Atom{value: val}
 		}
@@ -127,8 +138,10 @@ func (p *Parser) Expression() Expr {
 		}
 		return Number{value: num}
 	case tokString:
+		// remove surrounding double quotes
 		return String{value: val[1 : len(val)-1]}
 	case tokLParen:
+		// build a slice of Expr until we reach a closing parenthesis
 		exprs := []Expr{}
 		for p.peek() != tokRParen {
 			exprs = append(exprs, p.Expression())

@@ -51,6 +51,7 @@ const (
 	eof rune = 0
 )
 
+// Lexer reads inputs and produces a stream of Tokens and their matching string literals
 type Lexer struct {
 	r *bufio.Reader
 }
@@ -61,6 +62,7 @@ func NewLexer(r io.Reader) *Lexer {
 	}
 }
 
+// read reads a rune from the input buffer
 func (l *Lexer) read() rune {
 	ch, _, err := l.r.ReadRune()
 	if err != nil {
@@ -69,6 +71,7 @@ func (l *Lexer) read() rune {
 	return ch
 }
 
+// unread puts the last read rune back into the buffer
 func (l *Lexer) unread() {
 	if err := l.r.UnreadRune(); err != nil {
 		// if we reach here, there is a problem in our logic
@@ -76,6 +79,8 @@ func (l *Lexer) unread() {
 	}
 }
 
+// Next determines the next Token and string literal. It returns tokEOF,
+// "" when the input buffer is empty.
 func (l *Lexer) Next() (Token, string) {
 	ch := l.read()
 	switch ch {
@@ -110,6 +115,8 @@ func (l *Lexer) Next() (Token, string) {
 	}
 }
 
+// nextNumber continuously reads input characters in [0-9_] and returns
+// the full string
 func (l *Lexer) nextNumber() (Token, string) {
 	var buf bytes.Buffer
 
@@ -124,6 +131,8 @@ func (l *Lexer) nextNumber() (Token, string) {
 	return tokNumber, buf.String()
 }
 
+// nextComment continuously reads input characters until a newline and returns
+// the full string
 func (l *Lexer) nextComment() (Token, string) {
 	var buf bytes.Buffer
 
@@ -136,6 +145,9 @@ func (l *Lexer) nextComment() (Token, string) {
 	return tokComment, buf.String()
 }
 
+// nextString continuously reads input characters until a double quote
+// and returns the full string. This method accounts for backslashes in
+// the string and will not add the backslash to the output.
 func (l *Lexer) nextString() (Token, string) {
 	var buf bytes.Buffer
 
@@ -158,6 +170,8 @@ func (l *Lexer) nextString() (Token, string) {
 	return tokString, buf.String()
 }
 
+// nextAtom continuously reads input characters until a valid ending
+// character and returns the full string
 func (l *Lexer) nextAtom() (Token, string) {
 	var buf bytes.Buffer
 
