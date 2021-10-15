@@ -1,7 +1,6 @@
 package main
 
-import "glispr/internal"
+// import "glispr/internal"
 
 func main() {
-	internal.Run()
 }
