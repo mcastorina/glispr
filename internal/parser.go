@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 )
@@ -78,7 +79,13 @@ type Parser struct {
 	peekStr string
 }
 
-func NewParser(input string) *Parser {
+func NewParser(input io.Reader) *Parser {
+	return &Parser{
+		lexer: NewLexer(input),
+	}
+}
+
+func NewStringParser(input string) *Parser {
 	return &Parser{
 		lexer: NewLexer(strings.NewReader(input)),
 	}

@@ -8,7 +8,7 @@ func TestParseLiterals(t *testing.T) {
 		expected Expr
 	}
 	parse := func(input string) Expr {
-		parser := NewParser(input)
+		parser := NewStringParser(input)
 		return parser.Expression()
 	}
 	tests := []testInput{
@@ -34,7 +34,7 @@ func TestParseList(t *testing.T) {
 		expected string
 	}
 	parse := func(input string) Expr {
-		parser := NewParser(input)
+		parser := NewStringParser(input)
 		return parser.Expression()
 	}
 	tests := []testInput{
@@ -59,6 +59,29 @@ func TestParseList(t *testing.T) {
 	for _, test := range tests {
 		if have := parse(test.input).String(); have != test.expected {
 			t.Errorf("Found %s, want %s", have, test.expected)
+		}
+	}
+}
+
+func TestEval(t *testing.T) {
+	type testInput struct {
+		input        string
+		expected     string
+		expectedKind ExprType
+	}
+	tests := []testInput{
+		{
+			"(* (+ 1 2) 3)",
+			"9",
+			exprNumber,
+		},
+	}
+	for _, test := range tests {
+		parser := NewStringParser(test.input)
+		expr := parser.Expression()
+		result := Eval(expr)
+		if result.Kind() != test.expectedKind || result.String() != test.expected {
+			t.Errorf("Expression %s evaluated to %s, want %d", expr, result, 9)
 		}
 	}
 }
